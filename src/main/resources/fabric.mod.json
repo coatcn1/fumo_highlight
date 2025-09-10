@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "book_highlight",
+  "version": "${version}",
+  "name": "Chest Enchanted Book Highlighter",
+  "description": "从 JSON 读取中文附魔名，在箱子界面高亮包含指定附魔名的附魔书格子（不限等级）。",
+  "authors": ["coatcn"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["cn.coatcn.bookhighlight.BookHighlightMod"]
+  },
+  "mixins": ["book_highlight.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "fabric": ">=0.96.11+1.20.4",
+    "minecraft": "1.20.4",
+    "java": ">=17"
+  }
+}
