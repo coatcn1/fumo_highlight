@@ -40,8 +40,9 @@ public abstract class HandledScreenMixin {
         var targets = ConfigManager.getInstance().getTargetNamesCn();
         if (EnchantMatch.isTargetEnchantedBook(stack, targets)) {
             int color = ConfigManager.getInstance().getHighlightColor(); // ARGB
-            int left = this.x + slot.x;
-            int top  = this.y + slot.y;
+            // context 在 drawSlot 之前已平移到容器原点，这里无需再次加 x/y
+            int left = slot.x + 1;
+            int top  = slot.y + 1;
             context.fill(left, top, left + 16, top + 16, color);
         }
     }
