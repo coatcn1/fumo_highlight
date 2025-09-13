@@ -1,11 +1,21 @@
-# Fabric Example Mod
+# 附魔高亮
 
-## Setup
+一个用于 Fabric 的客户端模组，可在容器界面中高亮包含指定中文附魔名称的附魔书。
 
-For setup instructions please see the [fabric documentation page](https://docs.fabricmc.net/develop/getting-started/setting-up-a-development-environment) that relates to the IDE that you are using.
+## 功能
 
-## License
+- 在箱子等界面为目标附魔书绘制高亮覆盖。
+- 按下快捷键（默认 **B**）打开附魔名称编辑界面，可添加或移除要关注的附魔，并切换是否显示。
+- 通过 Mod Menu 打开的设置界面可自定义快捷键以及高亮颜色。
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+## 构建
 
-.\gradlew.bat clean build
+使用下列命令构建模组：
+
+```bash
+./gradlew build
+```
+
+## 许可
+
+本项目基于 [MIT License](LICENSE)。

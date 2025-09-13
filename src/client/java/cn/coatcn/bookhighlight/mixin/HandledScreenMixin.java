@@ -37,7 +37,7 @@ public abstract class HandledScreenMixin {
         ItemStack stack = slot.getStack();
         if (stack == null || stack.isEmpty()) return;
 
-        var targets = ConfigManager.getInstance().getTargetNamesCn();
+        var targets = ConfigManager.getInstance().getVisibleNamesCn();
         if (EnchantMatch.isTargetEnchantedBook(stack, targets)) {
             int color = ConfigManager.getInstance().getHighlightColor(); // ARGB
             // context 在 drawSlot 之前已平移到容器原点，这里无需再次加 x/y

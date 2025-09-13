@@ -10,6 +10,6 @@ public class ModMenuIntegration implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> new BookHighlightConfigScreen();
+        return BookHighlightSettingsScreen::new;
     }
 }

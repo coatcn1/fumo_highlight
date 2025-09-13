@@ -14,8 +14,12 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.lwjgl.glfw.GLFW;
 
 /**
  * 配置管理：
@@ -37,8 +41,9 @@ public class ConfigManager {
         return INSTANCE;
     }
 
-    private Set<String> targetNamesCn = new HashSet<>();
+    private Map<String, Boolean> targets = new LinkedHashMap<>();
     private int highlightColor = 0x80FFD700; // 默认半透明金色
+    private int openKey = GLFW.GLFW_KEY_B;
     private Path configPath;
     private long lastModified = 0L;
 
@@ -72,12 +77,24 @@ public class ConfigManager {
             try (BufferedReader reader = Files.newBufferedReader(cfgFile, StandardCharsets.UTF_8)) {
                 JsonObject obj = GSON.fromJson(reader, JsonObject.class);
                 this.highlightColor = parseColor(obj.get("highlightColor").getAsString(), 0x80FFD700);
-                this.targetNamesCn.clear();
-                if (obj.has("names") && obj.get("names").isJsonArray()) {
+                this.openKey = obj.has("openKey") ? obj.get("openKey").getAsInt() : GLFW.GLFW_KEY_B;
+                this.targets.clear();
+                if (obj.has("targets") && obj.get("targets").isJsonArray()) {
+                    obj.getAsJsonArray("targets").forEach(e -> {
+                        if (e.isJsonObject()) {
+                            JsonObject o = e.getAsJsonObject();
+                            String name = o.has("name") ? o.get("name").getAsString() : null;
+                            boolean visible = !o.has("visible") || o.get("visible").getAsBoolean();
+                            if (name != null && !name.isBlank()) {
+                                this.targets.put(name.trim(), visible);
+                            }
+                        }
+                    });
+                } else if (obj.has("names") && obj.get("names").isJsonArray()) {
                     obj.getAsJsonArray("names").forEach(e -> {
                         String s = e.getAsString();
                         if (s != null && !s.isBlank()) {
-                            this.targetNamesCn.add(s.trim());
+                            this.targets.put(s.trim(), true);
                         }
                     });
                 }
@@ -91,18 +108,31 @@ public class ConfigManager {
     }
 
     private void loadFromInternalDefault() {
-        this.targetNamesCn.clear();
+        this.targets.clear();
         this.highlightColor = 0x80FFD700;
+        this.openKey = GLFW.GLFW_KEY_B;
         try (InputStream in = getClass().getResourceAsStream(INTERNAL_DEFAULT)) {
             if (in == null) return;
             try (BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 JsonObject obj = GSON.fromJson(br, JsonObject.class);
                 this.highlightColor = parseColor(obj.get("highlightColor").getAsString(), 0x80FFD700);
-                if (obj.has("names") && obj.get("names").isJsonArray()) {
+                this.openKey = obj.has("openKey") ? obj.get("openKey").getAsInt() : GLFW.GLFW_KEY_B;
+                if (obj.has("targets") && obj.get("targets").isJsonArray()) {
+                    obj.getAsJsonArray("targets").forEach(e -> {
+                        if (e.isJsonObject()) {
+                            JsonObject o = e.getAsJsonObject();
+                            String name = o.has("name") ? o.get("name").getAsString() : null;
+                            boolean visible = !o.has("visible") || o.get("visible").getAsBoolean();
+                            if (name != null && !name.isBlank()) {
+                                this.targets.put(name.trim(), visible);
+                            }
+                        }
+                    });
+                } else if (obj.has("names") && obj.get("names").isJsonArray()) {
                     obj.getAsJsonArray("names").forEach(e -> {
                         String s = e.getAsString();
                         if (s != null && !s.isBlank()) {
-                            this.targetNamesCn.add(s.trim());
+                            this.targets.put(s.trim(), true);
                         }
                     });
                 }
@@ -110,7 +140,7 @@ public class ConfigManager {
         } catch (IOException ignored) {}
     }
 
-    private int parseColor(String hex, int fallback) {
+    public static int parseColor(String hex, int fallback) {
         try {
             String h = hex.trim().toLowerCase();
             if (h.startsWith("0x")) {
@@ -131,12 +161,33 @@ public class ConfigManager {
         }
     }
 
-    public Set<String> getTargetNamesCn() {
-        return targetNamesCn;
+    public Map<String, Boolean> getTargetMap() {
+        return targets;
+    }
+
+    public Set<String> getVisibleNamesCn() {
+        return targets.entrySet().stream()
+                .filter(Map.Entry::getValue)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
+
+    public int getOpenKey() {
+        return openKey;
+    }
+
+    public void setOpenKey(int key) {
+        this.openKey = key;
+        saveCurrentToConfig();
     }
 
     public int getHighlightColor() {
         return highlightColor;
+    }
+
+    public void setHighlightColor(int color) {
+        this.highlightColor = color;
+        saveCurrentToConfig();
     }
 
     // 将当前配置写回并更新修改时间
@@ -148,9 +199,15 @@ public class ConfigManager {
 
             JsonObject obj = new JsonObject();
             obj.addProperty("highlightColor", String.format("0x%08X", highlightColor));
+            obj.addProperty("openKey", openKey);
             var arr = new com.google.gson.JsonArray();
-            for (String s : targetNamesCn) arr.add(s);
-            obj.add("names", arr);
+            for (var entry : targets.entrySet()) {
+                JsonObject t = new JsonObject();
+                t.addProperty("name", entry.getKey());
+                t.addProperty("visible", entry.getValue());
+                arr.add(t);
+            }
+            obj.add("targets", arr);
 
             try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(cfgFile), StandardCharsets.UTF_8))) {
                 bw.write(GSON.toJson(obj));
@@ -174,10 +231,10 @@ public class ConfigManager {
     }
 
     // 更新目标附魔集合（来自界面），并立即保存
-    public void updateTargets(Set<String> newTargets) {
-        this.targetNamesCn.clear();
+    public void updateTargets(Map<String, Boolean> newTargets) {
+        this.targets.clear();
         if (newTargets != null) {
-            this.targetNamesCn.addAll(newTargets);
+            this.targets.putAll(newTargets);
         }
         saveCurrentToConfig();
     }

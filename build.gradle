@@ -19,8 +19,7 @@ loom {
     splitEnvironmentSourceSets()
 
     mods {
-        // 保持你原来用的名字（如果你之前就是 "modid"，就别改）
-        "modid" {
+        "book_highlight" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }

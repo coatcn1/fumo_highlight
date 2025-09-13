@@ -1,16 +1,17 @@
 {
+  "openKey": 66,
   "highlightColor": "0x80FFD700",
-  "names": [
-    "利刃",
-    "奥术防御",
-    "鲜血魔咒",
-    "突刺",
-    "夜伏",
-    "再生",
-    "肾上腺素",
-    "不意",
-    "轻巧",
-    "活力",
-    "逆势回击"
+  "targets": [
+    { "name": "利刃", "visible": true },
+    { "name": "奥术防御", "visible": true },
+    { "name": "鲜血魔咒", "visible": true },
+    { "name": "突刺", "visible": true },
+    { "name": "夜伏", "visible": true },
+    { "name": "再生", "visible": true },
+    { "name": "肾上腺素", "visible": true },
+    { "name": "不意", "visible": true },
+    { "name": "轻巧", "visible": true },
+    { "name": "活力", "visible": true },
+    { "name": "逆势回击", "visible": true }
   ]
 }
