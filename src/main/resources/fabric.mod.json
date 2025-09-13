@@ -8,7 +8,8 @@
   "license": "MIT",
   "environment": "client",
   "entrypoints": {
-    "client": ["cn.coatcn.bookhighlight.BookHighlightMod"]
+    "client": ["cn.coatcn.bookhighlight.BookHighlightMod"],
+    "modmenu": ["cn.coatcn.bookhighlight.ModMenuIntegration"]
   },
   "mixins": ["book_highlight.mixins.json"],
   "depends": {
@@ -16,5 +17,8 @@
     "fabric": ">=0.96.11+1.20.4",
     "minecraft": "1.20.4",
     "java": ">=17"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

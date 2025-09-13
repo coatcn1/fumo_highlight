@@ -39,10 +39,12 @@ public class ConfigManager {
 
     private Set<String> targetNamesCn = new HashSet<>();
     private int highlightColor = 0x80FFD700; // 默认半透明金色
+    private Path configPath;
+    private long lastModified = 0L;
 
     private ConfigManager() {}
 
-    public void loadOrInit() {
+    public synchronized void loadOrInit() {
         try {
             Path cfgDir = FabricLoader.getInstance().getConfigDir().resolve(CONFIG_DIR_NAME);
             Path cfgFile = cfgDir.resolve(CONFIG_FILE_NAME);
@@ -65,6 +67,7 @@ public class ConfigManager {
                     }
                 }
             }
+            this.configPath = cfgFile;
             // 读取配置
             try (BufferedReader reader = Files.newBufferedReader(cfgFile, StandardCharsets.UTF_8)) {
                 JsonObject obj = GSON.fromJson(reader, JsonObject.class);
@@ -79,6 +82,7 @@ public class ConfigManager {
                     });
                 }
             }
+            this.lastModified = Files.getLastModifiedTime(cfgFile).toMillis();
         } catch (Exception e) {
             e.printStackTrace();
             // 如果外部读失败，退回到内置默认
@@ -135,8 +139,8 @@ public class ConfigManager {
         return highlightColor;
     }
 
-    // 工具：将当前配置写回（可选功能，暂不暴露给界面）
-    public void saveCurrentToConfig() {
+    // 将当前配置写回并更新修改时间
+    public synchronized void saveCurrentToConfig() {
         try {
             Path cfgDir = FabricLoader.getInstance().getConfigDir().resolve(CONFIG_DIR_NAME);
             Path cfgFile = cfgDir.resolve(CONFIG_FILE_NAME);
@@ -151,8 +155,30 @@ public class ConfigManager {
             try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(cfgFile), StandardCharsets.UTF_8))) {
                 bw.write(GSON.toJson(obj));
             }
+            this.configPath = cfgFile;
+            this.lastModified = Files.getLastModifiedTime(cfgFile).toMillis();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // 检测文件是否被外部修改，若是则重新加载
+    public void reloadIfChanged() {
+        if (configPath == null) return;
+        try {
+            long lm = Files.getLastModifiedTime(configPath).toMillis();
+            if (lm != lastModified) {
+                loadOrInit();
+            }
+        } catch (IOException ignored) {}
+    }
+
+    // 更新目标附魔集合（来自界面），并立即保存
+    public void updateTargets(Set<String> newTargets) {
+        this.targetNamesCn.clear();
+        if (newTargets != null) {
+            this.targetNamesCn.addAll(newTargets);
+        }
+        saveCurrentToConfig();
     }
 }

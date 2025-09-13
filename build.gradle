@@ -11,6 +11,7 @@ base { archivesName = project.archives_base_name }
 repositories {
     // Loom 会自动注入 Mojang/Fabric 的仓库；这里补充：
     maven { url = 'https://repo.spongepowered.org/repository/maven-public' } // Sponge 仓库，提供 org.spongepowered:mixin
+    maven { url = 'https://maven.terraformersmc.com/releases/' }
     mavenCentral()
 }
 
@@ -45,6 +46,11 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}") {
+        transitive = false
+    }
+
 
     // ★ Mixin 注解处理器（与运行时 0.8.7 对齐，避免编译期拿不到）
     annotationProcessor "org.spongepowered:mixin:0.8.7:processor"
